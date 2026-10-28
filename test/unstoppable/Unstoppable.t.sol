@@ -4,10 +4,13 @@ pragma solidity =0.8.25;
 
 import {Test, console} from "forge-std/Test.sol";
 import {DamnValuableToken} from "../../src/DamnValuableToken.sol";
+import {SafeTransferLib, ERC20} from "solmate/tokens/ERC4626.sol";
 import {UnstoppableVault, Owned} from "../../src/unstoppable/UnstoppableVault.sol";
 import {UnstoppableMonitor} from "../../src/unstoppable/UnstoppableMonitor.sol";
 
 contract UnstoppableChallenge is Test {
+    using SafeTransferLib for ERC20;
+
     address deployer = makeAddr("deployer");
     address player = makeAddr("player");
 
@@ -92,6 +95,18 @@ contract UnstoppableChallenge is Test {
      */
     function test_unstoppable() public checkSolvedByPlayer {
         
+        uint256 supplyBefore = vault.totalSupply();
+        uint256 assetsBefore = vault.totalAssets(); 
+
+        ERC20(token).safeTransfer(address(vault), 1);
+
+        uint256 supplyAfter = vault.totalSupply();
+        uint256 assetsAfter = vault.totalAssets(); 
+
+        assertEq(supplyBefore, supplyAfter);
+        assertEq(assetsBefore + 1, assetsAfter);
+
+        assertTrue(vault.convertToShares(supplyAfter) != assetsAfter);
     }
 
     /**
